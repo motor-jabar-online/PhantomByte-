@@ -12,18 +12,19 @@
   #authPage { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.1); margin: 20px; }
   #authPage h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
   .form-group { margin-bottom: 15px; }
-  .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+  .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
+  .form-group input:focus { border-color: #1877f2; }
   .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
   .btn-primary { background: #1877f2; color: white; }
   .btn-primary:hover { background: #145dbf; }
   .btn-success { background: #42b72a; color: white; }
   .btn-success:hover { background: #36a420; }
-  #authMsg { color: #d32f2f; font-size: 13px; margin-top: 10px; text-align: center; }
+  #authMsg { color: #d32f2f; font-size: 13px; margin-top: 15px; text-align: center; font-weight: 500; }
 
   /* --- HALAMAN CHAT --- */
   #appPage { display: none; width: 100%; height: 100vh; background: white; overflow: hidden; }
   @media (min-width: 768px) {
-    #appPage { max-width: 900px; height: 90vh; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.1); display: none; margin: 20px; }
+    #appPage { max-width: 900px; height: 90vh; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.1); margin: 20px; }
   }
   
   .layout { display: flex; height: 100%; }
@@ -36,10 +37,10 @@
   }
   #myProfile { padding: 15px; background: #1877f2; color: white; display: flex; justify-content: space-between; align-items: center; }
   #myProfile h3 { font-size: 16px; }
-  #logoutBtn { background: #ff4d4f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  #logoutBtn { background: #ff4d4f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
   
   #searchArea { padding: 10px; border-bottom: 1px solid #eee; display: flex; gap: 5px; }
-  #searchInput { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+  #searchInput { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
   #addBtn { padding: 8px 12px; background: #42b72a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
   
   #contactList { flex: 1; overflow-y: auto; list-style: none; }
@@ -50,11 +51,8 @@
 
   /* Area Chat */
   #chatArea { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; position: relative; }
-  @media (max-width: 767px) {
-    #chatArea { width: 100%; }
-  }
   #chatHeader { padding: 15px; background: white; border-bottom: 1px solid #ddd; display: flex; align-items: center; font-weight: bold; color: #333; }
-  #backBtn { display: none; background: none; border: none; font-size: 20px; margin-right: 10px; cursor: pointer; }
+  #backBtn { display: none; background: none; border: none; font-size: 20px; margin-right: 10px; cursor: pointer; color: #1877f2; font-weight: bold; }
   @media (max-width: 767px) { #backBtn { display: block; } }
 
   #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -75,7 +73,7 @@
 <div id="authPage">
   <h2>Chat Privat</h2>
   <div class="form-group">
-    <input id="usernameInput" type="text" placeholder="Username (tanpa spasi)" />
+    <input id="usernameInput" type="text" placeholder="Username (tanpa spasi)" autocomplete="off" />
   </div>
   <div class="form-group">
     <input id="passwordInput" type="password" placeholder="Password (min. 6 karakter)" />
@@ -96,7 +94,7 @@
         <button id="logoutBtn">Logout</button>
       </div>
       <div id="searchArea">
-        <input id="searchInput" type="text" placeholder="Cari username teman..." />
+        <input id="searchInput" type="text" placeholder="Cari username teman..." autocomplete="off" />
         <button id="addBtn">Tambah</button>
       </div>
       <ul id="contactList">
@@ -182,24 +180,30 @@ const formatUsername = (name) => name.trim().toLowerCase().replace(/\s+/g, "");
 document.getElementById("registerBtn").onclick = async () => {
   const username = formatUsername(usernameInput.value);
   const password = passwordInput.value;
-  if (!username || password.length < 6) return authMsg.textContent = "Username wajib diisi & Password min. 6 karakter!";
+  authMsg.style.color = "red";
+
+  if (!username || password.length < 6) {
+    return authMsg.textContent = "Username wajib diisi & Password min. 6 karakter!";
+  }
 
   try {
-    // Cek apakah username sudah dipakai orang lain
+    // 1. Cek apakah username sudah dipakai
     const userSnap = await get(ref(db, "usernames/" + username));
     if (userSnap.exists()) return authMsg.textContent = "Username sudah dipakai, cari yang lain!";
 
-    // Daftar ke Firebase Auth menggunakan email dummy
+    // 2. Daftar ke Firebase Auth
     const email = username + DUMMY_DOMAIN;
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
 
-    // Simpan data user ke Realtime Database
-    await set(ref(db, "users/" + uid), { username: username });
+    // 3. Simpan ke Realtime Database
     await set(ref(db, "usernames/" + username), uid);
+    await set(ref(db, "users/" + uid), { username: username, createdAt: Date.now() });
     
     authMsg.style.color = "green";
-    authMsg.textContent = "Pendaftaran berhasil!";
+    authMsg.textContent = "Pendaftaran berhasil! Silakan login.";
+    passwordInput.value = "";
+    
   } catch (error) {
     authMsg.textContent = "Gagal daftar: " + error.message;
   }
@@ -208,6 +212,8 @@ document.getElementById("registerBtn").onclick = async () => {
 document.getElementById("loginBtn").onclick = async () => {
   const username = formatUsername(usernameInput.value);
   const password = passwordInput.value;
+  authMsg.style.color = "red";
+  
   if (!username || !password) return authMsg.textContent = "Isi username dan password!";
 
   try {
@@ -240,7 +246,6 @@ onAuthStateChanged(auth, async (user) => {
 
     authPage.style.display = "none";
     appPage.style.display = "block";
-    if(window.innerWidth > 767) appPage.style.display = "block";
     
     loadContacts();
     usernameInput.value = "";
