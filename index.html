@@ -1,183 +1,383 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tester API LeakOsint</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            max-width: 600px;
-            width: 100%;
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        h2 {
-            text-align: center;
-            color: #ffffff;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 5px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            border: none;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .result-box {
-            margin-top: 20px;
-            background-color: #0a0a0a;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            min-height: 100px;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 13px;
-            color: #00ff00;
-            overflow-x: auto;
-        }
-        .proxy-note {
-            background-color: #332200;
-            border-left: 5px solid #ffaa00;
-            padding: 10px;
-            font-size: 13px;
-            color: #ffcc66;
-            margin-bottom: 20px;
-            border-radius: 3px;
-        }
-        .proxy-note a {
-            color: #ffea00;
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chat Privat Firebase</title>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+  body { background: #f0f2f5; height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+  /* --- HALAMAN LOGIN --- */
+  #authPage { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.1); margin: 20px; }
+  #authPage h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
+  .form-group { margin-bottom: 15px; }
+  .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+  .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
+  .btn-primary { background: #1877f2; color: white; }
+  .btn-primary:hover { background: #145dbf; }
+  .btn-success { background: #42b72a; color: white; }
+  .btn-success:hover { background: #36a420; }
+  #authMsg { color: #d32f2f; font-size: 13px; margin-top: 10px; text-align: center; }
+
+  /* --- HALAMAN CHAT --- */
+  #appPage { display: none; width: 100%; height: 100vh; background: white; overflow: hidden; }
+  @media (min-width: 768px) {
+    #appPage { max-width: 900px; height: 90vh; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.1); display: none; margin: 20px; }
+  }
+  
+  .layout { display: flex; height: 100%; }
+  
+  /* Sidebar (Daftar Kontak) */
+  #sidebar { width: 35%; min-width: 280px; border-right: 1px solid #ddd; display: flex; flex-direction: column; background: #fff; }
+  @media (max-width: 767px) {
+    #sidebar { width: 100%; position: absolute; z-index: 10; height: 100%; transition: 0.3s; }
+    #sidebar.hide-mobile { display: none; }
+  }
+  #myProfile { padding: 15px; background: #1877f2; color: white; display: flex; justify-content: space-between; align-items: center; }
+  #myProfile h3 { font-size: 16px; }
+  #logoutBtn { background: #ff4d4f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  
+  #searchArea { padding: 10px; border-bottom: 1px solid #eee; display: flex; gap: 5px; }
+  #searchInput { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+  #addBtn { padding: 8px 12px; background: #42b72a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  
+  #contactList { flex: 1; overflow-y: auto; list-style: none; }
+  .contact-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+  .contact-item:hover { background: #f5f6f6; }
+  .contact-item.active { background: #e7f3ff; border-left: 4px solid #1877f2; }
+  .contact-item span { font-weight: 600; color: #333; }
+
+  /* Area Chat */
+  #chatArea { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; position: relative; }
+  @media (max-width: 767px) {
+    #chatArea { width: 100%; }
+  }
+  #chatHeader { padding: 15px; background: white; border-bottom: 1px solid #ddd; display: flex; align-items: center; font-weight: bold; color: #333; }
+  #backBtn { display: none; background: none; border: none; font-size: 20px; margin-right: 10px; cursor: pointer; }
+  @media (max-width: 767px) { #backBtn { display: block; } }
+
+  #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 14px; word-wrap: break-word; line-height: 1.4; }
+  .msg.me { background: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
+  .msg.other { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  
+  #inputArea { padding: 10px; background: white; display: flex; gap: 10px; border-top: 1px solid #ddd; }
+  #msgInput { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+  #sendBtn { padding: 0 20px; background: #1877f2; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+  
+  #emptyChat { display: flex; flex: 1; justify-content: center; align-items: center; color: #888; flex-direction: column; text-align: center; padding: 20px; }
+</style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Tester API LeakOsint Client</h2>
-    
-    <div class="proxy-note">
-        <strong>⚠️ PENTING (BACA DULU):</strong><br>
-        Karena pembatasan keamanan browser (CORS), Anda harus mengaktifkan akses sementara di proxy jembatan terlebih dahulu agar request tidak gagal.<br>
-        1. Buka tab baru, klik link ini: <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank"><strong>Klik Aktifkan Proxy Demo</strong></a><br>
-        2. Klik tombol besar <strong>"Request temporary access to the demo server"</strong> pada halaman tersebut.<br>
-        3. Kembali ke halaman ini dan jalankan tes.
-    </div>
-
-    <div class="form-group">
-        <label for="token">Masukkan API Token Anda:</label>
-        <input type="text" id="token" placeholder="Contoh: 1966317946:yiE4A3VP">
-    </div>
-
-    <div class="form-group">
-        <label for="request">Data yang Ingin Dicari:</label>
-        <input type="text" id="request" placeholder="Contoh: Nama, Email, atau Target">
-    </div>
-
-    <div class="form-group">
-        <label for="limit">Batas Hasil (Limit):</label>
-        <input type="number" id="limit" value="100" min="100" max="10000">
-    </div>
-
-    <button id="btnKirim">Jalankan Request API</button>
-
-    <h3>Respon Server (JSON Mentah):</h3>
-    <div class="result-box" id="result">Hasil respon server akan muncul di sini...</div>
+<!-- ================= HALAMAN LOGIN / DAFTAR ================= -->
+<div id="authPage">
+  <h2>Chat Privat</h2>
+  <div class="form-group">
+    <input id="usernameInput" type="text" placeholder="Username (tanpa spasi)" />
+  </div>
+  <div class="form-group">
+    <input id="passwordInput" type="password" placeholder="Password (min. 6 karakter)" />
+  </div>
+  <button class="btn btn-primary" id="loginBtn">Login</button>
+  <button class="btn btn-success" id="registerBtn">Daftar Baru</button>
+  <p id="authMsg"></p>
 </div>
 
-<script>
-    document.getElementById('btnKirim').addEventListener('click', async function() {
-        const token = document.getElementById('token').value.trim();
-        const requestVal = document.getElementById('request').value.trim();
-        const limit = parseInt(document.getElementById('limit').value) || 100;
-        const resultBox = document.getElementById('result');
+<!-- ================= HALAMAN APLIKASI CHAT ================= -->
+<div id="appPage">
+  <div class="layout">
+    
+    <!-- SIDEBAR KONTAK -->
+    <div id="sidebar">
+      <div id="myProfile">
+        <h3 id="myUsernameDisplay">Loading...</h3>
+        <button id="logoutBtn">Logout</button>
+      </div>
+      <div id="searchArea">
+        <input id="searchInput" type="text" placeholder="Cari username teman..." />
+        <button id="addBtn">Tambah</button>
+      </div>
+      <ul id="contactList">
+        <!-- Daftar kontak akan muncul di sini -->
+      </ul>
+    </div>
 
-        if (!token || !requestVal) {
-            resultBox.style.color = '#ff3333';
-            resultBox.innerText = 'Error: Token API dan Data Pencarian wajib diisi!';
-            return;
-        }
+    <!-- AREA CHAT -->
+    <div id="chatArea">
+      <div id="chatHeader">
+        <button id="backBtn">←</button>
+        <span id="chatWithName">Pilih Kontak</span>
+      </div>
+      
+      <div id="emptyChat">
+        <h2>Selamat Datang di Chat Privat</h2>
+        <p>Pilih teman di sebelah kiri atau tambahkan teman baru untuk mulai mengobrol.</p>
+      </div>
 
-        resultBox.style.color = '#00ff00';
-        resultBox.innerText = 'Sedang mengirim request via jembatan CORS proxy...';
+      <div id="messages" style="display:none;"></div>
+      
+      <div id="inputArea" style="display:none;">
+        <input id="msgInput" type="text" placeholder="Ketik pesan..." autocomplete="off" />
+        <button id="sendBtn">Kirim</button>
+      </div>
+    </div>
 
-        // URL Endpoint asli LeakOsint dengan ditambahkan CORS proxy di depannya
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const targetUrl = 'https://leakosintapi.com/';
-        
-        // Mempersiapkan payload JSON sesuai dokumentasi
-        const payload = {
-            "token": token,
-            "request": requestVal,
-            "limit": limit,
-            "lang": "en"
-        };
+  </div>
+</div>
 
-        try {
-            const response = await fetch(proxyUrl + targetUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+<!-- ================= JAVASCRIPT ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-            if (!response.ok) {
-                throw new Error('HTTP status ' + response.status);
-            }
+// Konfigurasi Firebase Anda
+const firebaseConfig = {
+  apiKey: "AIzaSyBYjDmJh5OG_AkZesWObgGkSgr6yX0iBEI",
+  authDomain: "roraxbali-65802.firebaseapp.com",
+  databaseURL: "https://roraxbali-65802-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "roraxbali-65802",
+  storageBucket: "roraxbali-65802.firebasestorage.app",
+  messagingSenderId: "750633313866",
+  appId: "1:750633313866:web:3d2e552960e06db83968b3",
+  measurementId: "G-24YY6ZPP6Z"
+};
 
-            const data = await response.json();
-            resultBox.style.color = '#00ff00';
-            resultBox.innerText = JSON.stringify(data, null, 4);
+// Inisialisasi Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-        } catch (error) {
-            resultBox.style.color = '#ff3333';
-            resultBox.innerText = 'Request Gagal / Error!\n\n' +
-                'Kemungkinan Penyebab:\n' +
-                '1. Anda belum mengaktifkan izin "CORS Anywhere" di tab sebelah.\n' +
-                '2. Kuota token gratis Anda telah habis.\n' +
-                '3. Server leakosintapi.com menolak koneksi proxy.\n\n' +
-                'Detail Error: ' + error.message;
-        }
+// Domain dummy untuk trik login pakai username
+const DUMMY_DOMAIN = "@chat.roraxbali.app"; 
+
+// Variabel Global
+let currentUser = null;
+let currentUsername = "";
+let currentPartnerUid = null;
+let currentPartnerName = "";
+let unsubMessages = null;
+let unsubContacts = null;
+
+// Elemen UI
+const authPage = document.getElementById("authPage");
+const appPage = document.getElementById("appPage");
+const authMsg = document.getElementById("authMsg");
+const usernameInput = document.getElementById("usernameInput");
+const passwordInput = document.getElementById("passwordInput");
+const myUsernameDisplay = document.getElementById("myUsernameDisplay");
+const contactList = document.getElementById("contactList");
+const emptyChat = document.getElementById("emptyChat");
+const messagesBox = document.getElementById("messages");
+const inputArea = document.getElementById("inputArea");
+const chatWithName = document.getElementById("chatWithName");
+
+// Format username (hilangkan spasi, jadikan huruf kecil)
+const formatUsername = (name) => name.trim().toLowerCase().replace(/\s+/g, "");
+
+// ================= 1. PROSES DAFTAR & LOGIN =================
+
+document.getElementById("registerBtn").onclick = async () => {
+  const username = formatUsername(usernameInput.value);
+  const password = passwordInput.value;
+  if (!username || password.length < 6) return authMsg.textContent = "Username wajib diisi & Password min. 6 karakter!";
+
+  try {
+    // Cek apakah username sudah dipakai orang lain
+    const userSnap = await get(ref(db, "usernames/" + username));
+    if (userSnap.exists()) return authMsg.textContent = "Username sudah dipakai, cari yang lain!";
+
+    // Daftar ke Firebase Auth menggunakan email dummy
+    const email = username + DUMMY_DOMAIN;
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    // Simpan data user ke Realtime Database
+    await set(ref(db, "users/" + uid), { username: username });
+    await set(ref(db, "usernames/" + username), uid);
+    
+    authMsg.style.color = "green";
+    authMsg.textContent = "Pendaftaran berhasil!";
+  } catch (error) {
+    authMsg.textContent = "Gagal daftar: " + error.message;
+  }
+};
+
+document.getElementById("loginBtn").onclick = async () => {
+  const username = formatUsername(usernameInput.value);
+  const password = passwordInput.value;
+  if (!username || !password) return authMsg.textContent = "Isi username dan password!";
+
+  try {
+    const email = username + DUMMY_DOMAIN;
+    await signInWithEmailAndPassword(auth, email, password);
+    authMsg.textContent = "";
+  } catch (error) {
+    authMsg.textContent = "Login gagal: Username atau password salah.";
+  }
+};
+
+document.getElementById("logoutBtn").onclick = () => {
+  if (unsubMessages) unsubMessages();
+  if (unsubContacts) unsubContacts();
+  signOut(auth);
+};
+
+// ================= 2. DETEKSI STATUS LOGIN =================
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    
+    // Ambil username dari database
+    const snap = await get(ref(db, "users/" + user.uid + "/username"));
+    if (snap.exists()) {
+      currentUsername = snap.val();
+      myUsernameDisplay.textContent = "@" + currentUsername;
+    }
+
+    authPage.style.display = "none";
+    appPage.style.display = "block";
+    if(window.innerWidth > 767) appPage.style.display = "block";
+    
+    loadContacts();
+    usernameInput.value = "";
+    passwordInput.value = "";
+  } else {
+    currentUser = null;
+    authPage.style.display = "block";
+    appPage.style.display = "none";
+    contactList.innerHTML = "";
+    resetChatUI();
+  }
+});
+
+// ================= 3. DAFTAR KONTAK (SIDEBAR) =================
+
+function loadContacts() {
+  if (unsubContacts) unsubContacts();
+  const contactsRef = ref(db, "users/" + currentUser.uid + "/contacts");
+  
+  unsubContacts = onValue(contactsRef, (snapshot) => {
+    contactList.innerHTML = "";
+    const contacts = snapshot.val();
+    if (!contacts) {
+      contactList.innerHTML = "<li style='padding:15px; color:#888; font-size:13px; text-align:center;'>Belum ada teman. Cari username temanmu di atas!</li>";
+      return;
+    }
+    
+    Object.keys(contacts).forEach(uid => {
+      const contact = contacts[uid];
+      const li = document.createElement("li");
+      li.className = "contact-item";
+      li.innerHTML = `<span>@${contact.username}</span>`;
+      li.onclick = () => openChat(uid, contact.username, li);
+      contactList.appendChild(li);
     });
-</script>
+  });
+}
 
+document.getElementById("addBtn").onclick = async () => {
+  const searchUser = formatUsername(document.getElementById("searchInput").value);
+  if (!searchUser) return alert("Ketik username temanmu!");
+  if (searchUser === currentUsername) return alert("Itu username kamu sendiri!");
+  
+  const contactSnap = await get(ref(db, "users/" + currentUser.uid + "/contacts/" + searchUser));
+  if (contactSnap.exists()) return alert("Dia sudah ada di daftar temanmu!");
+
+  // Cari UID teman berdasarkan username
+  const uidSnap = await get(ref(db, "usernames/" + searchUser));
+  if (!uidSnap.exists()) return alert("Username tidak ditemukan!");
+  
+  const partnerUid = uidSnap.val();
+  
+  try {
+    // Tambahkan ke daftar kontak kita
+    await set(ref(db, `users/${currentUser.uid}/contacts/${partnerUid}`), { username: searchUser });
+    // Tambahkan kita ke daftar kontak dia
+    await set(ref(db, `users/${partnerUid}/contacts/${currentUser.uid}`), { username: currentUsername });
+    
+    document.getElementById("searchInput").value = "";
+    alert("Berhasil menambahkan teman!");
+  } catch (error) {
+    alert("Gagal menambah teman: " + error.message);
+  }
+};
+
+// ================= 4. LOGIKA CHAT =================
+
+function openChat(partnerUid, partnerName, element) {
+  currentPartnerUid = partnerUid;
+  currentPartnerName = partnerName;
+  
+  // Update UI Sidebar
+  document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+  if(element) element.classList.add('active');
+  
+  // Tampilan HP: sembunyikan sidebar, tampilkan chat
+  if(window.innerWidth <= 767) document.getElementById("sidebar").classList.add("hide-mobile");
+  
+  chatWithName.textContent = "@" + partnerName;
+  emptyChat.style.display = "none";
+  messagesBox.style.display = "flex";
+  inputArea.style.display = "flex";
+
+  // Buat ID Room Chat (di-sort agar unik dan sama untuk berdua)
+  const chatId = [currentUser.uid, partnerUid].sort().join("_");
+  
+  if (unsubMessages) unsubMessages();
+  const messagesRef = ref(db, "chats/" + chatId + "/messages");
+  
+  unsubMessages = onValue(messagesRef, (snapshot) => {
+    messagesBox.innerHTML = "";
+    const msgs = snapshot.val();
+    if (msgs) {
+      Object.values(msgs).forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "msg " + (msg.sender === currentUser.uid ? "me" : "other");
+        div.textContent = msg.text;
+        messagesBox.appendChild(div);
+      });
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+  });
+}
+
+document.getElementById("sendBtn").onclick = () => {
+  const text = document.getElementById("msgInput").value.trim();
+  if (!text || !currentPartnerUid) return;
+
+  const chatId = [currentUser.uid, currentPartnerUid].sort().join("_");
+  push(ref(db, "chats/" + chatId + "/messages"), {
+    sender: currentUser.uid,
+    text: text,
+    timestamp: serverTimestamp()
+  });
+  
+  document.getElementById("msgInput").value = "";
+};
+
+// Event enter untuk kirim pesan
+document.getElementById("msgInput").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") document.getElementById("sendBtn").click();
+});
+
+// Tombol back (untuk HP)
+document.getElementById("backBtn").onclick = () => {
+  document.getElementById("sidebar").classList.remove("hide-mobile");
+  resetChatUI();
+};
+
+function resetChatUI() {
+  currentPartnerUid = null;
+  chatWithName.textContent = "Pilih Kontak";
+  emptyChat.style.display = "flex";
+  messagesBox.style.display = "none";
+  inputArea.style.display = "none";
+  if(unsubMessages) { unsubMessages(); unsubMessages = null; }
+}
+</script>
 </body>
 </html>
